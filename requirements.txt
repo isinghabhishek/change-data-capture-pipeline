@@ -1,0 +1,7 @@
+confluent-kafka>=2.3.0
+pyiceberg>=0.6.0
+hypothesis>=6.100.0
+psycopg2-binary>=2.9.9
+pandas>=2.2.0
+pytest>=8.0.0
+fastavro>=1.9.0
