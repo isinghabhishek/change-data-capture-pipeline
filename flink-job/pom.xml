@@ -22,7 +22,7 @@
     <flink.version>1.18.1</flink.version>
     <iceberg.version>1.5.2</iceberg.version>
     <kafka.version>3.6.1</kafka.version>
-    <avro.version>1.11.3</avro.version>
+    <avro.version>1.11.4</avro.version>
     <confluent.version>7.6.0</confluent.version>
     <jqwik.version>1.8.4</jqwik.version>
     <junit.version>5.10.2</junit.version>
