@@ -16,8 +16,8 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
   - Add `Makefile` with targets: `up`, `down`, `seed`, `teardown`, `test`, `submit-job`
   - _Requirements: 11.1_
 
-- [ ] 2. Docker Compose infrastructure
-  - [ ] 2.1 Write `docker-compose.yml` with all services
+- [x] 2. Docker Compose infrastructure
+  - [x] 2.1 Write `docker-compose.yml` with all services
     - Services: `postgres`, `zookeeper`, `kafka`, `schema-registry`, `kafka-connect` (Debezium), `jobmanager`, `taskmanager`, `minio`, `iceberg-rest`, `prometheus`, `grafana`
     - Configure PostgreSQL with `wal_level=logical`, `max_replication_slots=4`, `max_wal_senders=4`
     - Configure Flink JobManager with RocksDB state backend, 30 s checkpoint interval, `EXACTLY_ONCE` mode, Prometheus reporter on port 9249
@@ -26,11 +26,11 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Configure Iceberg REST catalog pointing to MinIO
     - Add healthchecks for PostgreSQL, Kafka, Schema Registry, Flink JobManager
     - _Requirements: 11.1_
-  - [ ] 2.2 Write `infra/init-minio.sh` to create `warehouse` and `checkpoints` buckets on MinIO startup
+  - [x] 2.2 Write `infra/init-minio.sh` to create `warehouse` and `checkpoints` buckets on MinIO startup
     - _Requirements: 11.1_
 
-- [ ] 3. PostgreSQL source configuration
-  - [ ] 3.1 Write `scripts/init-postgres.sql`
+- [x] 3. PostgreSQL source configuration
+  - [x] 3.1 Write `scripts/init-postgres.sql`
     - Create `cdc_user` with `REPLICATION` and `LOGIN` privileges
     - Grant `SELECT` on all monitored tables to `cdc_user`
     - Create source tables: `orders`, `customers`, `products` with appropriate columns and primary keys
@@ -38,15 +38,15 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Create `cdc_publication` covering `orders`, `customers`, `products`, `cdc_heartbeat`
     - Create replication slot `debezium_slot` using `pgoutput` plugin
     - _Requirements: 1.1, 1.2, 1.3_
-  - [ ] 3.2 Write `scripts/check_wal_lag.py` implementing `check_wal_lag(conn, slot_name, warn_threshold_bytes)`
+  - [x] 3.2 Write `scripts/check_wal_lag.py` implementing `check_wal_lag(conn, slot_name, warn_threshold_bytes)`
     - Query `pg_replication_slots` for `restart_lsn`
     - Compute `pg_wal_lsn_diff(pg_current_wal_lsn(), restart_lsn)`
     - Emit `WARNING` log entry if lag exceeds 10 GB threshold
     - Return `WalLagStatus` dataclass with slot name, lag bytes, and warning flag
     - _Requirements: 1.5_
 
-- [ ] 4. Debezium connector configuration
-  - [ ] 4.1 Write `connectors/debezium-postgres.json` with all connector properties
+- [x] 4. Debezium connector configuration
+  - [x] 4.1 Write `connectors/debezium-postgres.json` with all connector properties
     - Set `connector.class`, `database.*`, `plugin.name=pgoutput`, `publication.name=cdc_publication`, `slot.name=debezium_slot`
     - Set `snapshot.mode=initial`, `snapshot.locking.mode=minimal`
     - Set Avro converters pointing to Schema Registry
@@ -56,7 +56,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.5_
 
 - [ ] 5. Kafka topic management
-  - [ ] 5.1 Write `scripts/create_topics.py` implementing `topic_name()` and `create_cdc_topic()`
+  - [~] 5.1 Write `scripts/create_topics.py` implementing `topic_name()` and `create_cdc_topic()`
     - `topic_name(database, schema, table) -> str` returns `"{database}.{schema}.{table}"`
     - `create_cdc_topic()` creates topic with 6 partitions, replication factor 3, min ISR 2, 7-day retention
     - Create all required topics: `db.public.orders`, `db.public.customers`, `db.public.products`, `cdc.dead-letter-queue` (3 partitions, 30-day retention), `cdc.heartbeat` (1 partition, 1-day retention), `connect-offsets`, `connect-configs`, `connect-status`
@@ -67,14 +67,14 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Requirements: 4.1, 4.2, 4.3_
 
 - [ ] 6. Flink CDC processor — core data model and Avro deserializer
-  - [ ] 6.1 Define Java data model classes in `flink-job/src/main/java/cdc/model/`
+  - [~] 6.1 Define Java data model classes in `flink-job/src/main/java/cdc/model/`
     - `ChangeEvent` (fields: `before`, `after`, `source`, `op`, `ts_ms`, `transaction`)
     - `SourceInfo` (fields: `version`, `connector`, `name`, `ts_ms`, `db`, `schema`, `table`, `lsn`, `txId`)
     - `PrimaryKey` (wrapper for equality/hashing by PK value)
     - `DLQEnvelope` (fields per design §3.3: `original_topic`, `original_partition`, `original_offset`, `error_type`, `error_message`, `error_timestamp_utc`, `raw_payload`)
     - `ErrorType` enum: `DESERIALIZATION_FAILURE`, `SCHEMA_INCOMPATIBLE`, `TYPE_MISMATCH`, `PROCESSING_ERROR`
     - _Requirements: 3.1, 3.2, 3.3, 8.2_
-  - [ ] 6.2 Implement `AvroDeserializer` in `flink-job/src/main/java/cdc/operator/AvroDeserializer.java`
+  - [~] 6.2 Implement `AvroDeserializer` in `flink-job/src/main/java/cdc/operator/AvroDeserializer.java`
     - Implement `DeserializationSchema<ChangeEvent>`
     - Decode Avro bytes using Schema Registry client (resolve schema by embedded schema ID)
     - On decode error: call `on_error()` which emits `DLQEnvelope` to DLQ side output with `DESERIALIZATION_FAILURE`
@@ -87,7 +87,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Property 1: Kafka key = PK`_
 
 - [ ] 7. Flink CDC processor — DeduplicationOperator
-  - [ ] 7.1 Implement `DeduplicationOperator` in `flink-job/src/main/java/cdc/operator/DeduplicationOperator.java`
+  - [~] 7.1 Implement `DeduplicationOperator` in `flink-job/src/main/java/cdc/operator/DeduplicationOperator.java`
     - Extend `KeyedProcessFunction<PrimaryKey, ChangeEvent, ChangeEvent>`
     - Maintain `ValueState<Long>` for last-seen LSN per PK
     - In `processElement`: emit event only if `event.source.lsn > lastSeenLsn`; update state
@@ -100,7 +100,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Property 4: Within-batch dedup`_
 
 - [ ] 8. Flink CDC processor — SchemaEvolutionOperator
-  - [ ] 8.1 Implement `is_type_widening()` utility in `flink-job/src/main/java/cdc/schema/TypeCompatibility.java`
+  - [~] 8.1 Implement `is_type_widening()` utility in `flink-job/src/main/java/cdc/schema/TypeCompatibility.java`
     - Implement widening map: `INT→LONG`, `FLOAT→DOUBLE`, `DECIMAL(p,s)→DECIMAL(p',s)` where `p'>p`
     - Return `true` for safe widenings, `false` for all other type changes
     - _Requirements: 7.3, 7.4_
@@ -108,7 +108,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Test all valid widening pairs return `true`
     - Test narrowing and incompatible pairs return `false`
     - _Requirements: 7.3, 7.4_
-  - [ ] 8.3 Implement `SchemaEvolutionOperator` in `flink-job/src/main/java/cdc/operator/SchemaEvolutionOperator.java`
+  - [~] 8.3 Implement `SchemaEvolutionOperator` in `flink-job/src/main/java/cdc/operator/SchemaEvolutionOperator.java`
     - Extend `RichMapFunction<ChangeEvent, ChangeEvent>`
     - In `open()`: initialise Iceberg REST catalog connection
     - In `map()`: call `apply_schema_change()` logic — add new columns with NULL default, retain dropped columns, widen compatible types, raise `IncompatibleTypeChangeError` for breaking changes
@@ -123,7 +123,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Properties 6-9: Schema evolution`_
 
 - [ ] 9. Flink CDC processor — DLQRouter and IcebergSink wiring
-  - [ ] 9.1 Implement `DLQRouter` in `flink-job/src/main/java/cdc/operator/DLQRouter.java`
+  - [~] 9.1 Implement `DLQRouter` in `flink-job/src/main/java/cdc/operator/DLQRouter.java`
     - Extend `ProcessFunction<ChangeEvent, ChangeEvent>`
     - Define DLQ side output tag
     - In `processElement`: on error emit `DLQEnvelope` to side output; on success emit to main output
@@ -134,13 +134,13 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Generate events of each error type; verify all 7 DLQ envelope fields are non-null/non-empty
     - **Validates: Requirements 8.2**
     - _Tag: `# Feature: cdc-pipeline, Property 10: DLQ metadata completeness`_
-  - [ ] 9.3 Implement `IcebergSink` configuration in `flink-job/src/main/java/cdc/sink/IcebergSinkFactory.java`
+  - [~] 9.3 Implement `IcebergSink` configuration in `flink-job/src/main/java/cdc/sink/IcebergSinkFactory.java`
     - Configure `FlinkSink.forRowData()` with upsert mode, equality delete key on source PK column(s)
     - Set catalog to REST catalog at `http://iceberg-rest:8181`, warehouse `s3://warehouse/`
     - Set table namespace `cdc`, table name matching source table
     - Configure `PARTITION BY DAYS(updated_at)`, format version 2, `write.upsert.enabled=true`, `write.merge.mode=merge-on-read`
     - _Requirements: 5.1, 5.2_
-  - [ ] 9.4 Implement main Flink job entry point in `flink-job/src/main/java/cdc/CdcPipelineJob.java`
+  - [~] 9.4 Implement main Flink job entry point in `flink-job/src/main/java/cdc/CdcPipelineJob.java`
     - Build `StreamExecutionEnvironment` with RocksDB state backend, 30 s checkpoint interval, `EXACTLY_ONCE` mode, 60 s timeout, max 1 concurrent checkpoint, 3 tolerated failures
     - Build multi-topic `KafkaSource` for all monitored tables
     - Wire operator graph: `KafkaSource → AvroDeserializer → ChangeEventRouter → [per table] DeduplicationOperator → SchemaEvolutionOperator → IcebergSink`
@@ -153,18 +153,18 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - **Validates: Requirements 5.1, 5.2**
     - _Tag: `# Feature: cdc-pipeline, Property 3: Upsert/delete routing`_
 
-- [ ] 10. Checkpoint: Ensure all tests pass
+- [~] 10. Checkpoint: Ensure all tests pass
   - Run `mvn test` in `flink-job/` and `pytest tests/` to confirm all implemented tests pass
   - Ensure all Flink operator unit tests pass with jqwik
   - Ask the user if questions arise.
 
 - [ ] 11. Exactly-once semantics — checkpoint and atomic commit
-  - [ ] 11.1 Implement `KafkaOffsetsCommitter` in `flink-job/src/main/java/cdc/sink/KafkaOffsetsCommitter.java`
+  - [~] 11.1 Implement `KafkaOffsetsCommitter` in `flink-job/src/main/java/cdc/sink/KafkaOffsetsCommitter.java`
     - Implement `CheckpointListener`
     - In `notifyCheckpointComplete(checkpointId)`: commit Kafka consumer group offsets for the offsets stored at that checkpoint
     - Ensure offset commit is atomic with Iceberg snapshot commit (called after `IcebergSink.notifyCheckpointComplete`)
     - _Requirements: 6.2, 6.4_
-  - [ ] 11.2 Verify checkpoint protocol in `CdcPipelineJob` matches design §6.6
+  - [~] 11.2 Verify checkpoint protocol in `CdcPipelineJob` matches design §6.6
     - Confirm `IcebergSink.notifyCheckpointComplete` flushes Parquet files, appends data files, commits Iceberg snapshot, then triggers `KafkaOffsetsCommitter`
     - Confirm on restart: orphaned files from previous run are not in any snapshot; Kafka offsets rewound to last committed position
     - _Requirements: 6.2, 6.3, 6.4_
@@ -175,7 +175,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Property 5: Exactly-once on restart`_
 
 - [ ] 12. Dead Letter Queue — Python utilities
-  - [ ] 12.1 Implement `scripts/dlq_replay.py` with `replay_dlq()` function
+  - [~] 12.1 Implement `scripts/dlq_replay.py` with `replay_dlq()` function
     - Accept args: `--dlq-topic`, `--kafka-bootstrap`, `--filter-error-type`, `--since`, `--dry-run`
     - Read all messages from `cdc.dead-letter-queue`
     - Optionally filter by `error_type` or time range (`since`)
@@ -195,18 +195,18 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Property 2: Incompatible schema → DLQ`_
 
 - [ ] 13. Monitoring stack
-  - [ ] 13.1 Write `monitoring/prometheus.yml` with scrape configs
+  - [~] 13.1 Write `monitoring/prometheus.yml` with scrape configs
     - Scrape Flink JobManager `:9249/metrics` every 15 s
     - Scrape Flink TaskManager `:9249/metrics` every 15 s
     - Scrape Kafka JMX Exporter `:9308/metrics` every 15 s
     - Scrape Debezium JMX Exporter `:9404/metrics` every 15 s
     - Scrape PostgreSQL exporter `:9187/metrics` every 15 s
     - _Requirements: 9.1_
-  - [ ] 13.2 Write `monitoring/grafana/provisioning/datasources/prometheus.yml` to auto-provision Prometheus datasource
+  - [~] 13.2 Write `monitoring/grafana/provisioning/datasources/prometheus.yml` to auto-provision Prometheus datasource
     - _Requirements: 9.5_
-  - [ ] 13.3 Write `monitoring/grafana/provisioning/dashboards/dashboard.yml` provisioning config
+  - [~] 13.3 Write `monitoring/grafana/provisioning/dashboards/dashboard.yml` provisioning config
     - _Requirements: 9.5_
-  - [ ] 13.4 Write `monitoring/grafana/dashboards/cdc-pipeline.json` Grafana dashboard JSON
+  - [~] 13.4 Write `monitoring/grafana/dashboards/cdc-pipeline.json` Grafana dashboard JSON
     - Panel 1: Kafka consumer lag per topic-partition (line chart, alert threshold at 10,000 messages)
     - Panel 2: Flink checkpoint duration (histogram)
     - Panel 3: Flink checkpoint failure count (counter)
@@ -217,7 +217,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Panel 8: Flink records-in / records-out per operator
     - Set refresh interval to 30 s
     - _Requirements: 9.1, 9.5_
-  - [ ] 13.5 Implement heartbeat latency tracking in `flink-job/src/main/java/cdc/operator/HeartbeatLatencyTracker.java`
+  - [~] 13.5 Implement heartbeat latency tracking in `flink-job/src/main/java/cdc/operator/HeartbeatLatencyTracker.java`
     - Detect heartbeat events (table = `cdc_heartbeat`)
     - Record `heartbeat_write_timestamp` from event `source.ts_ms`
     - On Iceberg commit: compute `iceberg_commit_timestamp − heartbeat_write_timestamp` and emit as Prometheus gauge
@@ -229,7 +229,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Tag: `# Feature: cdc-pipeline, Property 12: Heartbeat latency accuracy`_
 
 - [ ] 14. Data quality reconciliation job
-  - [ ] 14.1 Implement `scripts/reconcile.py` with `reconcile_table()` and `compare_row_checksums()`
+  - [~] 14.1 Implement `scripts/reconcile.py` with `reconcile_table()` and `compare_row_checksums()`
     - `reconcile_table(source_conn, iceberg_catalog, table_name, sample_size=1000)` per design §6.6
     - Query source `COUNT(*)` and target count (excluding `_cdc_deleted=TRUE` rows)
     - If counts match: sample `min(sample_size, count)` PKs; fetch source rows; compare against Iceberg rows
@@ -246,12 +246,12 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - **Validates: Requirements 10.1, 10.2, 10.3, 10.4**
     - _Tag: `# Feature: cdc-pipeline, Properties 13-14: Reconciliation`_
 
-- [ ] 15. Checkpoint: Ensure all tests pass
+- [~] 15. Checkpoint: Ensure all tests pass
   - Run `mvn test` in `flink-job/` and `pytest tests/` to confirm all implemented tests pass
   - Ask the user if questions arise.
 
 - [ ] 16. Seed script and teardown script
-  - [ ] 16.1 Write `scripts/seed.sh`
+  - [~] 16.1 Write `scripts/seed.sh`
     - Wait for PostgreSQL healthcheck to pass
     - Run `init-postgres.sql` via `psql`
     - Call `scripts/create_topics.py` to create all Kafka topics
@@ -259,7 +259,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Submit Flink CDC job JAR via `POST http://jobmanager:8081/jars/{jar_id}/run`
     - Insert sample data: 100 orders, 50 customers, 20 products
     - _Requirements: 11.2_
-  - [ ] 16.2 Write `scripts/teardown.sh`
+  - [~] 16.2 Write `scripts/teardown.sh`
     - Run `docker compose down -v`
     - Drop replication slot `debezium_slot` if PostgreSQL still reachable
     - Remove MinIO buckets `warehouse` and `checkpoints` via `mc rb --force`
@@ -267,7 +267,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Requirements: 11.5_
 
 - [ ] 17. Smoke tests
-  - [ ] 17.1 Write `tests/test_smoke.py` with infrastructure validation checks
+  - [~] 17.1 Write `tests/test_smoke.py` with infrastructure validation checks
     - PostgreSQL: verify `wal_level = logical`, replication slot `debezium_slot` exists, `cdc_user` has correct privileges
     - Kafka: verify all required topics exist with correct replication factor, min ISR, and retention settings
     - Schema Registry: verify running and compatibility mode = `BACKWARD`
@@ -276,7 +276,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - _Requirements: 11.1, 11.4_
 
 - [ ] 18. Integration tests
-  - [ ] 18.1 Write `tests/test_integration.py` with end-to-end pipeline tests against Docker Compose
+  - [~] 18.1 Write `tests/test_integration.py` with end-to-end pipeline tests against Docker Compose
     - Test 1 — Full snapshot: start Debezium against populated table; verify all rows appear in Kafka with correct `op=r`
     - Test 2 — WAL streaming INSERT: insert row; verify Change Event in Kafka with `op=c` and correct payload within 5 s
     - Test 3 — WAL streaming UPDATE: update row; verify Change Event with `op=u`, correct before/after images within 5 s
@@ -299,7 +299,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - **Validates: Requirements 4.6**
     - _Tag: `# Feature: cdc-pipeline, Property 2: Schema Registry rejection`_
 
-- [ ] 19. README documentation
+- [~] 19. README documentation
   - Write `README.md` with:
     - Project overview and architecture diagram (Mermaid flowchart from design §1)
     - Prerequisites (Docker, Docker Compose, Java 11+, Python 3.10+, Maven)
@@ -310,7 +310,7 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Links to design.md and requirements.md
     - _Requirements: 11.3_
 
-- [ ] 20. Final checkpoint — Ensure all tests pass
+- [~] 20. Final checkpoint — Ensure all tests pass
   - Run `mvn test` in `flink-job/` and `pytest tests/` to confirm all tests pass
   - Verify smoke tests pass against running Docker Compose stack
   - Ask the user if questions arise.
