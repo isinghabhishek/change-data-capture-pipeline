@@ -66,15 +66,15 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Test topic config values (partitions, replication factor, retention)
     - _Requirements: 4.1, 4.2, 4.3_
 
-- [ ] 6. Flink CDC processor — core data model and Avro deserializer
-  - [~] 6.1 Define Java data model classes in `flink-job/src/main/java/cdc/model/`
+- [x] 6. Flink CDC processor — core data model and Avro deserializer
+  - [x] 6.1 Define Java data model classes in `flink-job/src/main/java/cdc/model/`
     - `ChangeEvent` (fields: `before`, `after`, `source`, `op`, `ts_ms`, `transaction`)
     - `SourceInfo` (fields: `version`, `connector`, `name`, `ts_ms`, `db`, `schema`, `table`, `lsn`, `txId`)
     - `PrimaryKey` (wrapper for equality/hashing by PK value)
     - `DLQEnvelope` (fields per design §3.3: `original_topic`, `original_partition`, `original_offset`, `error_type`, `error_message`, `error_timestamp_utc`, `raw_payload`)
     - `ErrorType` enum: `DESERIALIZATION_FAILURE`, `SCHEMA_INCOMPATIBLE`, `TYPE_MISMATCH`, `PROCESSING_ERROR`
     - _Requirements: 3.1, 3.2, 3.3, 8.2_
-  - [~] 6.2 Implement `AvroDeserializer` in `flink-job/src/main/java/cdc/operator/AvroDeserializer.java`
+  - [x] 6.2 Implement `AvroDeserializer` in `flink-job/src/main/java/cdc/operator/AvroDeserializer.java`
     - Implement `DeserializationSchema<ChangeEvent>`
     - Decode Avro bytes using Schema Registry client (resolve schema by embedded schema ID)
     - On decode error: call `on_error()` which emits `DLQEnvelope` to DLQ side output with `DESERIALIZATION_FAILURE`
