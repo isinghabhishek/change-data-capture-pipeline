@@ -55,8 +55,8 @@ Primary languages: **Python** (utilities, reconciliation, DLQ replay, property-b
     - Set `errors.retry.delay.max.ms=60000`
     - _Requirements: 2.1, 2.2, 2.3, 3.1, 3.2, 3.3, 3.5_
 
-- [ ] 5. Kafka topic management
-  - [~] 5.1 Write `scripts/create_topics.py` implementing `topic_name()` and `create_cdc_topic()`
+- [x] 5. Kafka topic management
+  - [x] 5.1 Write `scripts/create_topics.py` implementing `topic_name()` and `create_cdc_topic()`
     - `topic_name(database, schema, table) -> str` returns `"{database}.{schema}.{table}"`
     - `create_cdc_topic()` creates topic with 6 partitions, replication factor 3, min ISR 2, 7-day retention
     - Create all required topics: `db.public.orders`, `db.public.customers`, `db.public.products`, `cdc.dead-letter-queue` (3 partitions, 30-day retention), `cdc.heartbeat` (1 partition, 1-day retention), `connect-offsets`, `connect-configs`, `connect-status`
