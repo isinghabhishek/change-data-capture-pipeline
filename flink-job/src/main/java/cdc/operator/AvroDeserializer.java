@@ -170,17 +170,13 @@ public class AvroDeserializer
     // -------------------------------------------------------------------------
 
     /**
-     * Returns {@code false} — this is an unbounded Kafka stream; there is no
-     * end-of-stream sentinel.
-     */
-    @Override
-    public boolean isEndOfStream(ChangeEvent nextElement) {
-        return false;
-    }
-
-    /**
      * Returns {@link TypeInformation} for {@link ChangeEvent} so that Flink
      * can choose the correct serializer for checkpointing and network transfer.
+     * <p>
+     * Note: {@code KafkaRecordDeserializationSchema} does not declare
+     * {@code getProducedType()} as an abstract method in Flink 1.18, but
+     * providing it makes the produced type explicit and avoids generic-type
+     * erasure issues during job submission.
      */
     @Override
     public TypeInformation<ChangeEvent> getProducedType() {
