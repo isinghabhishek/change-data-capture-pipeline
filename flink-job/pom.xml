@@ -63,6 +63,13 @@
       <version>3.1.0-1.18</version>
     </dependency>
 
+    <!-- ===== Flink connector base (DeliveryGuarantee, etc.) ===== -->
+    <dependency>
+      <groupId>org.apache.flink</groupId>
+      <artifactId>flink-connector-base</artifactId>
+      <version>${flink.version}</version>
+    </dependency>
+
     <!-- ===== Iceberg Flink runtime (fat jar for 1.18) ===== -->
     <dependency>
       <groupId>org.apache.iceberg</groupId>
@@ -99,6 +106,18 @@
       <groupId>org.apache.flink</groupId>
       <artifactId>flink-statebackend-rocksdb</artifactId>
       <version>${flink.version}</version>
+    </dependency>
+
+    <!-- ===== Hadoop common (provided by Flink cluster; needed for Iceberg CatalogLoader) ===== -->
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>3.3.6</version>
+      <scope>provided</scope>
+      <exclusions>
+        <exclusion><groupId>org.slf4j</groupId><artifactId>slf4j-log4j12</artifactId></exclusion>
+        <exclusion><groupId>log4j</groupId><artifactId>log4j</artifactId></exclusion>
+      </exclusions>
     </dependency>
 
     <!-- ===== Testing: jqwik (property-based) ===== -->
@@ -157,6 +176,7 @@
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.2.5</version>
         <configuration>
+          <argLine>--add-opens java.base/java.util=ALL-UNNAMED</argLine>
           <includes>
             <include>**/*Test.java</include>
             <include>**/*Tests.java</include>
