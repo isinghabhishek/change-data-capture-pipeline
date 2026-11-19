@@ -435,7 +435,26 @@ class SchemaEvolutionOperatorTest {
         if (id == Type.TypeID.FLOAT)   return 1.0f;
         if (id == Type.TypeID.DOUBLE)  return 1.0d;
         if (id == Type.TypeID.BOOLEAN) return true;
-        if (id == Type.TypeID.DECIMAL) return new java.math.BigDecimal("123.45");
+        if (id == Type.TypeID.DECIMAL) {
+            Types.DecimalType dt = (Types.DecimalType) type;
+            // Create a BigDecimal with sufficient precision and the correct scale
+            // For example: decimal(15, 2) needs a number with precision 15 and scale 2
+            // e.g., "123456789012.34" has precision 15 and scale 2
+            int precision = dt.precision();
+            int scale = dt.scale();
+            StringBuilder sb = new StringBuilder();
+            // Add digits before decimal: precision - scale digits
+            int beforeDecimal = precision - scale;
+            for (int i = 0; i < beforeDecimal; i++) {
+                sb.append("1");
+            }
+            sb.append(".");
+            // Add digits after decimal: scale digits
+            for (int i = 0; i < scale; i++) {
+                sb.append("2");
+            }
+            return new java.math.BigDecimal(sb.toString());
+        }
         if (id == Type.TypeID.BINARY)  return new byte[]{0x01};
         return "sample";
     }
